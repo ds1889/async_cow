@@ -6,8 +6,7 @@
 - 2、简化了相关导包和引用，并且保持接口一致
 - 3、实现了异步IO，引入协程概念，IO层面引入aiohttp，aiofiles等，使得本SDK适用于异步编程
 
-官方SDK请见 
-[![官方SDK](http://qiniutek.com/images/logo-2.png)](https://github.com/qiniu/python-sdk)
+[官方SDK请见] https://developer.qiniu.com/kodo/1242/python
 
 ## Install
 
@@ -114,6 +113,10 @@ except Exception as e:
 1.  首先从github clone项目到本地
 2.  在项目中有example供测试，配置好main.py中的access_key、secret_key、bucket以及file_path参数后即可开始测试
 
+
+## 组织:
+  QQ群: 614714752
+  <img src='https://gitee.com/xixigroup/async_cow/images/images' width='200'>
 
 特别鸣谢：[seven-cow](https://github.com/yueyoum/seven-cow)，[Hagworm](https://gitee.com/wsb310/hagworm) 以及七牛官方
 
