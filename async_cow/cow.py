@@ -421,7 +421,7 @@ class _Resume(object):
             host = await config.get_default('default_zone').get_up_host_by_token(self.up_token, self.hostscache_dir)
 
         offset = self.recovery_from_record()
-        for block in _file_iter(self.input_stream, config._BLOCK_SIZE, offset):
+        async for block in _file_iter(self.input_stream, config._BLOCK_SIZE, offset):
             length = len(block)
             crc = crc32(block)
             ret, info = await self.make_block(block, length, host)

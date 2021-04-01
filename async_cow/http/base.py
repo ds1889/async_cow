@@ -51,12 +51,16 @@ class RequestBase:
         if headers is not None:
             for k, v in headers.items():
                 post_headers.update({k: v})
-        form = FormData()
-        for k, v in data.items():
-            form.add_field(k, str(v))
 
-        if files:
-            form.add_field('file', files['file'][1], filename=files['file'][0])
+        if isinstance(data, (bytes, str)):
+            form = data
+        else:
+            form = FormData()
+            for k, v in data.items():
+                form.add_field(k, str(v))
+
+            if files:
+                form.add_field('file', files['file'][1], filename=files['file'][0])
 
         resp = await HTTPClient(
             request_class=CowClientRequest
@@ -72,17 +76,19 @@ class RequestBase:
             for k, v in headers.items():
                 post_headers.update({k: v})
 
-        form = FormData()
-        for k, v in data.items():
-            form.add_field(k, str(v))
+        if isinstance(data, (bytes, str)):
+            form = data
+        else:
+            form = FormData()
+            for k, v in data.items():
+                form.add_field(k, str(v))
 
-        if files:
-            form.add_field('file', files['file'][1], filename=files['file'][0])
+            if files:
+                form.add_field('file', files['file'][1], filename=files['file'][0])
 
         resp = await HTTPClient(request_class=CowClientRequest).put(
             url,
-            data=data,
-            files=files,
+            data=form,
             auth=auth,
             headers=post_headers
         )
