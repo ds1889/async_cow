@@ -30,7 +30,7 @@ setuptools.setup(
         'loguru==0.5.3',
     ],
     classifiers=[
-        r'Programming Language :: Python :: 3.x',
+        r'Programming Language :: Python :: 3.7',
         r'License :: OSI Approved :: Apache Software License',
         r'Operating System :: POSIX :: Linux',
     ],
