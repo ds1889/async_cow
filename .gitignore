@@ -20,7 +20,6 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -39,7 +38,6 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
-.nox/
 .coverage
 .coverage.*
 .cache
@@ -108,6 +106,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Other files and folders
+.idea/
+.vscode/
+.settings/
+script/
+key
 .dmypy.json
 dmypy.json
 
