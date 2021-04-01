@@ -71,6 +71,11 @@ class Result(dict):
         return self.get(r'status')
 
     @property
+    def status_code(self):
+
+        return self.get(r'status')
+
+    @property
     def headers(self):
 
         return self.get(r'headers')
