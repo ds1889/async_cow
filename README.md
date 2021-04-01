@@ -116,7 +116,7 @@ except Exception as e:
 
 ## 组织:
   QQ群: 614714752
-  <img src='https://gitee.com/xixigroup/async_cow/images/images' width='200'>
+  <img src='https://gitee.com/xixigroup/async_cow/blob/master/images/qq.jpeg' width='200'>
 
 特别鸣谢：[seven-cow](https://github.com/yueyoum/seven-cow)，[Hagworm](https://gitee.com/wsb310/hagworm) 以及七牛官方
 
