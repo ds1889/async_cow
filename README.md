@@ -11,7 +11,11 @@
 ## Install
 
 ```bash
+# 标准安装
 pip install async_cow
+
+# 从官方源安装，你能获取最新版本SDK
+pip install async_cow -i https://pypi.python.org/simple
 ```
 
 
@@ -47,7 +51,7 @@ bucket相关方法和用法和官方SDK同步
 #### 上传
 
 ```python
-file_path = '/Users/admin/Desktop/per_project/async_cow/README.md'
+file_path = '/Users/admin/Desktop/123.jpg'
 
 with open(file_path, 'rb') as f:
     c = f.read()
