@@ -28,6 +28,7 @@ setuptools.setup(
         'qiniu==7.3.1',
         'urllib3==1.26.2',
         'loguru==0.5.3',
+        'cachetools==4.2.1'
     ],
     classifiers=[
         r'Programming Language :: Python :: 3.7',

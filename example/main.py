@@ -1,7 +1,7 @@
 
 import asyncio
 
-from async_cow.cow import AsyncCow
+from async_cow.auth import AsyncCow
 
 
 async def main():
