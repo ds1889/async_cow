@@ -26,7 +26,7 @@ pip install async_cow -i https://pypi.python.org/simple
 
 在你需要的地方
 ```python
-from async_cow.auth import AsyncCow
+from async_cow import AsyncCow
 cow = AsyncCow(<ACCESS_KEY>, <SECRET_KEY>)
 ```
 获取一个指定的桶
