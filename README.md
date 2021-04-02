@@ -24,16 +24,12 @@ pip install async_cow
 from async_cow import AsyncCow
 cow = AsyncCow(<ACCESS_KEY>, <SECRET_KEY>)
 ```
-
-然后就可以通过 `cow.stat(<BUCKET>, <FILENAME>)` 这样来进行操作.
-但为了简化操作，并且考虑到大多数都是在一个bucket中进行文件操作，
-所以建议再做一步：
-
+获取一个指定的桶
 ```python
 b = cow.get_bucket(<BUCKET>)
 ```
 
-后面都用这个`b`对象来操作。 它代表了`<BUCKET>`
+后面都用这个桶对象来操作。 它代表了`<BUCKET>`
 
 #### 列出所有的bucket
 ```python
@@ -80,7 +76,7 @@ await b.delete('a')               # 删除单个文件
 ```
 
 
-#### 拷贝，移动（改名）
+#### 拷贝，移动（改名）经测试，只能在桶内copy和move
 
 这两个操作需要提供源文件名和目标文件名
 
@@ -118,6 +114,6 @@ except Exception as e:
   QQ群: 614714752
   <img src='https://gitee.com/xixigroup/async_cow/raw/master/images/qq.jpeg' width='200'>
 
-特别鸣谢：[seven-cow](https://github.com/yueyoum/seven-cow)，[Hagworm](https://gitee.com/wsb310/hagworm) 以及七牛官方
+特别鸣谢：[Hagworm](https://gitee.com/wsb310/hagworm) 以及七牛官方
 
 欢迎大佬指正！感谢您的星星❤
