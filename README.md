@@ -33,7 +33,7 @@ b = cow.get_bucket(<BUCKET>)
 
 #### 列出所有的bucket
 ```python
-res = await cow.buckets()
+res = await b.buckets()
 ```
 
 #### 列出一个bucket中的所有文件
