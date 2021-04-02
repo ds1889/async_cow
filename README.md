@@ -10,6 +10,7 @@
 
 ## Install
 
+python解释器版本要求：> 3.6
 ```bash
 # 标准安装
 pip install async_cow
