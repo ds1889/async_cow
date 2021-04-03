@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from cachetools import TTLCache
 import asyncio
 import hmac
 import json
@@ -8,10 +7,11 @@ import time
 from hashlib import sha1
 from qiniu import Auth
 from urllib.parse import urlparse
+from cachetools import TTLCache
 
 from async_cow import config
 from async_cow.compat import b
-from async_cow.http.aio import CowClientRequest
+from async_cow.http.aio import CowClientRequest, CowHttpAuthBase
 from async_cow.http.base import RequestBase
 from async_cow.service.storage.upload_progress_recorder import UploadProgressRecorder
 from async_cow.utils import urlsafe_base64_encode, crc32, _file_iter, rfc_from_timestamp
@@ -23,13 +23,16 @@ CACHE_MAX_SIZE = 2000
 
 class QiniuAuth(Auth):
 
-    def __init__(self, access_key, secret_key, max_token_level=CACHE_MAX_SIZE):
+    def __init__(self, access_key, secret_key, max_token_level=None):
         """
         :param access_key: access_key
         :param secret_key: secret_key
         :param max_token_level: token缓存数最大水位
         """
         super().__init__(access_key, secret_key)
+        
+        if not max_token_level:
+            max_token_level = CACHE_MAX_SIZE
 
         self._upload_token_cache = TTLCache(max_token_level, TTL)
         self._rtc_room_token_cache = TTLCache(max_token_level, TTL)
@@ -47,7 +50,7 @@ class QiniuAuth(Auth):
 
         if not token:
 
-            token = self.upload_token(bucket, key, expires=TTL + 100, policy=strict_policy, strict_policy=strict_policy)
+            token = self.upload_token(bucket, key, expires=TTL + 100, policy=policy, strict_policy=strict_policy)
             self._upload_token_cache[token_key] = token
 
         return token
@@ -69,41 +72,25 @@ class QiniuAuth(Auth):
         return token
 
 
-class RequestsAuth:
-
-    def __init__(self, auth):
-        self.auth = auth
-
-    def __call__(self, r):
-        if r.body is not None and r.headers['Content-Type'] == 'application/x-www-form-urlencoded':
-            token = self.auth.token_of_request(
-                r.url, r.body, 'application/x-www-form-urlencoded')
-        else:
-            token = self.auth.token_of_request(r.url)
-        r.headers['Authorization'] = 'QBox {0}'.format(token)
-        return r
-
-
 class QiniuMacAuth(object):
     """
     Sign Requests
 
     Attributes:
-        __access_key
-        __secret_key
+        _access_key
+        _secret_key
 
     http://kirk-docs.qiniu.com/apidocs/#TOC_325b437b89e8465e62e958cccc25c63f
     """
 
     def __init__(self, access_key, secret_key):
         self.qiniu_header_prefix = "X-Qiniu-"
-        self.__checkKey(access_key, secret_key)
-        self.__access_key = access_key
-        self.__secret_key = b(secret_key)
+        self._access_key = access_key
+        self._secret_key = b(secret_key)
 
-    def __token(self, data):
+    def _token(self, data):
         data = b(data)
-        hashed = hmac.new(self.__secret_key, data, sha1)
+        hashed = hmac.new(self._secret_key, data, sha1)
         return urlsafe_base64_encode(hashed.digest())
 
     def token_of_request(
@@ -149,7 +136,7 @@ class QiniuMacAuth(object):
                 data += body.decode(encoding='UTF-8')
             else:
                 data += body
-        return '{0}:{1}'.format(self.__access_key, self.__token(data))
+        return '{0}:{1}'.format(self._access_key, self._token(data))
 
     def qiniu_headers(self, headers):
         res = ""
@@ -158,16 +145,8 @@ class QiniuMacAuth(object):
                 res += key + ": %s\n" % (headers.get(key))
         return res
 
-    @staticmethod
-    def __checkKey(access_key, secret_key):
-        if not (access_key and secret_key):
-            raise ValueError('QiniuMacAuthSign : Invalid key')
 
-
-class QiniuMacRequestsAuth:
-
-    def __init__(self, auth):
-        self.auth = auth
+class QiniuMacRequestsAuth(CowHttpAuthBase):
 
     def __call__(self, r: CowClientRequest):
         token = self.auth.token_of_request(

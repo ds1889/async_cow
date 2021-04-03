@@ -6,7 +6,7 @@ import json
 class Sms:
     """
     TODO 所有功能方法都将返回协程对象，必须用await调用，和原七牛SDK保持接口同步
-
+    文档：https://developer.qiniu.com/sms/5812/sms-product-introduction
     Attributes:
         cow: AsyncCow对象
         不希望你直接调用本类
@@ -44,7 +44,7 @@ class Sms:
             req['pics'] = pics
         body = json.dumps(req)
         url = '{0}/v1/signature'.format(self.server)
-        return self.__post(url, body)
+        return self._post(url, body)
 
     def querySignature(self, audit_status=None, page=1, page_size=20):
         """
@@ -72,7 +72,7 @@ class Sms:
             url = '{0}?audit_status={1}&page={2}&page_size={3}'.format(url, audit_status, page, page_size)
         else:
             url = '{0}?page={1}&page_size={2}'.format(url, page, page_size)
-        return self.__get(url)
+        return self._get(url)
 
     def updateSignature(self, id, signature):
         """
@@ -88,7 +88,7 @@ class Sms:
         req = {}
         req['signature'] = signature
         body = json.dumps(req)
-        return self.__put(url, body)
+        return self._put(url, body)
 
     def deleteSignature(self, id):
 
@@ -99,7 +99,7 @@ class Sms:
 
         """
         url = '{0}/v1/signature/{1}'.format(self.server, id)
-        return self.__delete(url)
+        return self._delete(url)
 
     def createTemplate(self, name, template, type, description, signature_id):
         """
@@ -122,7 +122,7 @@ class Sms:
         req['description'] = description
         req['signature_id'] = signature_id
         body = json.dumps(req)
-        return self.__post(url, body)
+        return self._post(url, body)
 
     def queryTemplate(self, audit_status, page=1, page_size=20):
         """
@@ -153,7 +153,7 @@ class Sms:
             url = '{0}?audit_status={1}&page={2}&page_size={3}'.format(url, audit_status, page, page_size)
         else:
             url = '{0}?page={1}&page_size={2}'.format(url, page, page_size)
-        return self.__get(url)
+        return self._get(url)
 
     def updateTemplate(self, id, name, template, description, signature_id):
         """
@@ -172,7 +172,7 @@ class Sms:
         req['description'] = description
         req['signature_id'] = signature_id
         body = json.dumps(req)
-        return self.__put(url, body)
+        return self._put(url, body)
 
     def deleteTemplate(self, id):
         """
@@ -181,7 +181,7 @@ class Sms:
         :return: 请求成功 HTTP 状态码为 200
         """
         url = '{0}/v1/template/{1}'.format(self.server, id)
-        return self.__delete(url)
+        return self._delete(url)
 
     def sendMessage(self, template_id, mobiles, parameters):
         """
@@ -192,6 +192,9 @@ class Sms:
         :return:{
             "job_id": string
         }
+        短信发送给用户后，将会通过回调业务 URL 的方式，通知业务方用户发送短信的状态。
+        回调文档见：https://developer.qiniu.com/sms/5910/message-push
+
         """
         url = '{0}/v1/message'.format(self.server)
         req = {}
@@ -199,29 +202,142 @@ class Sms:
         req['mobiles'] = mobiles
         req['parameters'] = parameters
         body = json.dumps(req)
-        return self.__post(url, body)
+        return self._post(url, body)
 
-    def get_messages_info(self):
+    def get_charge_message_count(self, start, end, g, status):
+        """
+        查询发送计费条数
+        https://developer.qiniu.com/sms/7926/query-send-billing-number
+        名称	必填	描述
+        start	是	查询开始时间。格式：2006-01-02
+        end	是	查询结束时间。格式：2006-01-02
+        g	是	计量数据聚合粒度，支持： day, 5min
+        status	是	短信的状态，支持：“success”(发送成功), “failed”(发送失败), “sending”(发送中)
+        :return  通知短信和验证码短信会统一到 系统短信 计量计费
+        {
+            "data": {
+                "marketing": { // 营销短信统计
+                    "times": [
+                        1609430400,
+                    ],
+                    "values": [
+                        0,
+                    ]
+                },
+                "notification": { // 通知短信统计
+                    "times": [
+                        1609430400,
+                    ],
+                    "values": [
+                        0,
+                    ]
+                },
+                "verification": {// 验证码短信统计
+                    "times": [
+                        1609430400,
+                    ],
+                    "values": [
+                        0,
+                    ]
+                },
+                "voice": { // 语音短信统计
+                    "times": [
+                        1609430400,
+                    ],
+                    "values": [
+                        0,
+                    ]
+                }
+            }
+        }
+
+        """
+
+        url = f'/v1/user/statistics?start={start}&end={end}&g={g}&status={status}'
+
+        return self._get(url)
+
+    def get_messages_info(self,
+                          job_id=None,
+                          message_id=None,
+                          mobile=None,
+                          status=None,
+                          template_id=None,
+                          type=None,
+                          start=None,
+                          end=None,
+                          page=1,
+                          page_size=20,
+                          ):
         """
         查询发送记录，文档：https://developer.qiniu.com/sms/api/5852/query-send-sms
-        :return:
-            {}
-        """
-        url = "{0}/v1/messages".format(self.server)
-        return self.__get(url)
 
-    def __post(self, url, data=None):
+        名称	必填	描述
+        job_id	否	发送任务返回的 id
+        message_id	否	单条短信发送接口返回的 id
+        mobile	否	接收短信的手机号码
+        status	否	短信的状态，sending: 发送中，success: 发送成功，failed: 发送失败，waiting: 等待发送
+        template_id	否	模版 id
+        type	否	短信类型，marketing: 营销短信，notification: 通知短信，verification: 验证码类短信，voice: 语音短信
+        start	否	开始时间，timestamp，例如: 1563280448
+        end	否	结束时间，timestamp，例如: 1563280471
+        page	否	页码，默认为 1
+        page_size	否	每页返回的数据条数，默认20，最大200
+
+        :return:
+        {
+            "page": int,
+            "page_size": int,
+            "items":[{
+                "message_id": string,
+                "job_id": string,
+                "mobile": string,
+                "content": string,
+                "status": string,
+                "type": string,
+                "error": string, // 短信发送失败详细状态信息
+                "count": int, // 发送的短信条数
+                "created_at": timestamp,  // 短信发送时间
+                "delivrd_at": timestamp // 如果短信发送失败，那么不会返回这个字段
+            }...]
+        }
+        """
+        params = {
+            'page': page,
+            'page_size': page_size,
+        }
+        if job_id is not None:
+            params['job_id'] = job_id
+        if message_id is not None:
+            params['message_id'] = message_id
+        if mobile is not None:
+            params['mobile'] = mobile
+        if status is not None:
+            params['status'] = status
+        if template_id is not None:
+            params['template_id'] = template_id
+        if type is not None:
+            params['type'] = type
+        if start is not None:
+            params['start'] = start
+        if end is not None:
+            params['end'] = end
+        
+        url = "{0}/v1/messages".format(self.server)
+        return self._get(url, params=params)
+
+    def _post(self, url, data=None):
         headers = {'Content-Type': 'application/json'}
         return self.cow.http._post_with_qiniu_mac_and_headers(url, data, self.cow.auth, headers)
 
-    def __get(self, url, params=None):
+    def _get(self, url, params=None):
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         return self.cow.http._get_with_qiniu_mac_and_headers(url, params, self.cow.auth, headers)
 
-    def __put(self, url, data=None):
+    def _put(self, url, data=None):
         headers = {'Content-Type': 'application/json'}
         return self.cow.http._put_with_qiniu_mac_and_headers(url, data, self.cow.auth, headers)
 
-    def __delete(self, url, data=None):
+    def _delete(self, url, data=None):
         headers = {'Content-Type': 'application/json'}
         return self.cow.http._delete_with_qiniu_mac_and_headers(url, data, self.cow.auth, headers)

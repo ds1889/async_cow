@@ -65,7 +65,7 @@ class QcosClient(object):
         else:
             self.host = host
 
-    def list_stacks(self):
+    def f(self):
         """获得服务组列表
 
         列出当前应用的所有服务组信息。
@@ -76,7 +76,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks'.format(self.host)
-        return self.__get(url)
+        return self._get(url)
 
     def create_stack(self, args):
         """创建服务组
@@ -92,7 +92,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks'.format(self.host)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def delete_stack(self, stack):
         """删除服务组
@@ -108,7 +108,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}'.format(self.host, stack)
-        return self.__delete(url)
+        return self._delete(url)
 
     def get_stack(self, stack):
         """获取服务组
@@ -124,7 +124,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}'.format(self.host, stack)
-        return self.__get(url)
+        return self._get(url)
 
     def start_stack(self, stack):
         """启动服务组
@@ -140,7 +140,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/start'.format(self.host, stack)
-        return self.__post(url)
+        return self._post(url)
 
     def stop_stack(self, stack):
         """停止服务组
@@ -156,7 +156,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/stop'.format(self.host, stack)
-        return self.__post(url)
+        return self._post(url)
 
     def list_services(self, stack):
         """获得服务列表
@@ -172,7 +172,7 @@ class QcosClient(object):
             - ResponseInfo  请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services'.format(self.host, stack)
-        return self.__get(url)
+        return self._get(url)
 
     def create_service(self, stack, args):
         """创建服务
@@ -189,7 +189,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services'.format(self.host, stack)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def delete_service(self, stack, service):
         """删除服务
@@ -206,7 +206,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services/{2}'.format(self.host, stack, service)
-        return self.__delete(url)
+        return self._delete(url)
 
     def get_service_inspect(self, stack, service):
         """查看服务
@@ -223,7 +223,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services/{2}/inspect'.format(self.host, stack, service)
-        return self.__get(url)
+        return self._get(url)
 
     def start_service(self, stack, service):
         """启动服务
@@ -240,7 +240,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services/{2}/start'.format(self.host, stack, service)
-        return self.__post(url)
+        return self._post(url)
 
     def stop_service(self, stack, service):
         """停止服务
@@ -257,7 +257,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services/{2}/stop'.format(self.host, stack, service)
-        return self.__post(url)
+        return self._post(url)
 
     def update_service(self, stack, service, args):
         """更新服务
@@ -277,7 +277,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services/{2}'.format(self.host, stack, service)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def scale_service(self, stack, service, args):
         """扩容/缩容服务
@@ -297,7 +297,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services/{2}/scale'.format(self.host, stack, service)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def create_service_volume(self, stack, service, args):
         """创建存储卷
@@ -315,7 +315,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services/{2}/volumes'.format(self.host, stack, service)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def extend_service_volume(self, stack, service, volume, args):
         """扩容存储卷
@@ -334,7 +334,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services/{2}/volumes/{3}/extend'.format(self.host, stack, service, volume)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def delete_service_volume(self, stack, service, volume):
         """删除存储卷
@@ -352,7 +352,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/stacks/{1}/services/{2}/volumes/{3}'.format(self.host, stack, service, volume)
-        return self.__delete(url)
+        return self._delete(url)
 
     def list_containers(self, stack=None, service=None):
         """列出容器列表
@@ -374,7 +374,7 @@ class QcosClient(object):
             params['stack'] = stack
         if service is not None:
             params['service'] = service
-        return self.__get(url, params or None)
+        return self._get(url, params or None)
 
     def get_container_inspect(self, ip):
         """查看容器
@@ -390,7 +390,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/containers/{1}/inspect'.format(self.host, ip)
-        return self.__get(url)
+        return self._get(url)
 
     def start_container(self, ip):
         """启动容器
@@ -406,7 +406,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/containers/{1}/start'.format(self.host, ip)
-        return self.__post(url)
+        return self._post(url)
 
     def stop_container(self, ip):
         """停止容器
@@ -422,7 +422,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/containers/{1}/stop'.format(self.host, ip)
-        return self.__post(url)
+        return self._post(url)
 
     def restart_container(self, ip):
         """重启容器
@@ -438,7 +438,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/containers/{1}/restart'.format(self.host, ip)
-        return self.__post(url)
+        return self._post(url)
 
     def list_aps(self):
         """列出接入点
@@ -451,7 +451,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps'.format(self.host)
-        return self.__get(url)
+        return self._get(url)
 
     def create_ap(self, args):
         """申请接入点
@@ -467,7 +467,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps'.format(self.host)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def search_ap(self, mode, query):
         """搜索接入点
@@ -484,7 +484,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/search?{1}={2}'.format(self.host, mode, query)
-        return self.__get(url)
+        return self._get(url)
 
     def get_ap(self, apid):
         """查看接入点
@@ -500,7 +500,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/{1}'.format(self.host, apid)
-        return self.__get(url)
+        return self._get(url)
 
     def update_ap(self, apid, args):
         """更新接入点
@@ -517,7 +517,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/{1}'.format(self.host, apid)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def set_ap_port(self, apid, port, args):
         """更新接入点端口配置
@@ -535,7 +535,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/{1}/{2}'.format(self.host, apid, port)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def delete_ap(self, apid):
         """释放接入点
@@ -551,7 +551,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/{1}'.format(self.host, apid)
-        return self.__delete(url)
+        return self._delete(url)
 
     def publish_ap(self, apid, args):
         """绑定自定义域名
@@ -568,7 +568,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/{1}/publish'.format(self.host, apid)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def unpublish_ap(self, apid, args):
         """解绑自定义域名
@@ -585,7 +585,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/{1}/unpublish'.format(self.host, apid)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def get_ap_port_healthcheck(self, apid, port):
         """查看健康检查结果
@@ -602,7 +602,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/{1}/{2}/healthcheck'.format(self.host, apid, port)
-        return self.__get(url)
+        return self._get(url)
 
     def set_ap_port_container(self, apid, port, args):
         """调整后端实例配置
@@ -619,7 +619,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/{1}/{2}/setcontainer'.format(self.host, apid, port)
-        return self.__post(url, args)
+        return self._post(url, args)
 
     def disable_ap_port(self, apid, port):
         """临时关闭接入点端口
@@ -636,7 +636,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/{1}/{2}/disable'.format(self.host, apid, port)
-        return self.__post(url)
+        return self._post(url)
 
     def enable_ap_port(self, apid, port):
         """开启接入点端口
@@ -653,7 +653,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/{1}/{2}/enable'.format(self.host, apid, port)
-        return self.__post(url)
+        return self._post(url)
 
     def get_ap_providers(self):
         """列出入口提供商
@@ -667,7 +667,7 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/aps/providers'.format(self.host)
-        return self.__get(url)
+        return self._get(url)
 
     def get_web_proxy(self, backend):
         """获取一次性代理地址
@@ -683,13 +683,13 @@ class QcosClient(object):
             - ResponseInfo    请求的Response信息
         """
         url = '{0}/v3/webproxy'.format(self.host)
-        return self.__post(url, {'backend': backend})
+        return self._post(url, {'backend': backend})
 
-    def __post(self, url, data=None):
+    def _post(self, url, data=None):
         return self.cow.http._post_with_qiniu_mac(url, data, self.cow.auth)
 
-    def __get(self, url, params=None):
+    def _get(self, url, params=None):
         return self.cow.http._get_with_qiniu_mac(url, params, self.cow.auth)
 
-    def __delete(self, url):
+    def _delete(self, url):
         return self.cow.http._delete_with_qiniu_mac(url, None, self.cow.auth)

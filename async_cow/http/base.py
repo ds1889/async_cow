@@ -6,11 +6,9 @@ import traceback
 
 from aiohttp import FormData
 from qiniu.http import ResponseInfo
+from async_cow.http.aio import CowClientRequest, logger, HTTPClientPool, CowHttpAuthBase, HTTPClient
 
 _sys_info = '{0}; {1}'.format(platform.system(), platform.machine())
-
-from async_cow.http.aio import HTTPJsonClientPool, HTTPClient, CowClientRequest, logger
-
 
 USER_AGENT = 'QiniuPython/7.3.1 ({0}; ) Python/{1}'.format(_sys_info, platform.python_version())
 
@@ -38,10 +36,10 @@ def return_wrapper(func):
 
 class RequestBase:
 
-    def __init__(self, **kwargs):
+    def __init__(self, **setting):
 
-        self._http_json_client_pool = HTTPJsonClientPool(**kwargs)
-
+        # self._http_client_pool = HTTPClientPool(request_class=CowClientRequest, **setting)
+        self._setting = setting
         self._headers = {'User-Agent': USER_AGENT}
 
     @return_wrapper
@@ -52,9 +50,7 @@ class RequestBase:
             for k, v in headers.items():
                 post_headers.update({k: v})
 
-        if isinstance(data, (bytes, str)):
-            form = data
-        else:
+        if isinstance(data, dict):
             form = FormData()
             for k, v in data.items():
                 form.add_field(k, str(v))
@@ -62,9 +58,15 @@ class RequestBase:
             if files:
                 form.add_field('file', files['file'][1], filename=files['file'][0])
 
-        resp = await HTTPClient(
-            request_class=CowClientRequest
-        ).post(url, data=form, auth=auth, headers=post_headers)
+        else:
+            form = data
+
+        resp = await HTTPClient(request_class=CowClientRequest, **self._setting).post(
+            url,
+            data=form,
+            auth=auth,
+            headers=post_headers
+        )
 
         return resp
     
@@ -76,9 +78,7 @@ class RequestBase:
             for k, v in headers.items():
                 post_headers.update({k: v})
 
-        if isinstance(data, (bytes, str)):
-            form = data
-        else:
+        if isinstance(data, dict):
             form = FormData()
             for k, v in data.items():
                 form.add_field(k, str(v))
@@ -86,7 +86,10 @@ class RequestBase:
             if files:
                 form.add_field('file', files['file'][1], filename=files['file'][0])
 
-        resp = await HTTPClient(request_class=CowClientRequest).put(
+        else:
+            form = data
+
+        resp = await HTTPClient(request_class=CowClientRequest, **self._setting).put(
             url,
             data=form,
             auth=auth,
@@ -103,7 +106,7 @@ class RequestBase:
             for k, v in headers.items():
                 post_headers.update({k: v})
 
-        resp = await HTTPClient(request_class=CowClientRequest).get(
+        resp = await HTTPClient(request_class=CowClientRequest, **self._setting).get(
             url,
             params=params,
             auth=auth,
@@ -146,7 +149,7 @@ class RequestBase:
         qn_auth = QiniuMacRequestsAuth(
             auth) if auth is not None else None
 
-        resp = await HTTPClient().post(
+        resp = await HTTPClient(request_class=CowClientRequest).post(
             url,
             json=data,
             auth=qn_auth,
@@ -156,7 +159,7 @@ class RequestBase:
 
     @return_wrapper
     async def _get_with_qiniu_mac(self, url, params, auth):
-        resp = await HTTPClient().get(
+        resp = await HTTPClient(request_class=CowClientRequest).get(
             url,
             params=params,
             auth=QiniuMacRequestsAuth(auth) if auth is not None else None,
@@ -171,7 +174,7 @@ class RequestBase:
         if headers is not None:
             for k, v in headers.items():
                 post_headers.update({k: v})
-        resp = await HTTPClient().get(
+        resp = await HTTPClient(request_class=CowClientRequest).get(
             url,
             params=params,
             auth=QiniuMacRequestsAuth(auth) if auth is not None else None,
@@ -181,7 +184,7 @@ class RequestBase:
     @return_wrapper
     async def _delete_with_qiniu_mac(self, url, params, auth):
 
-        resp = await HTTPClient().delete(
+        resp = await HTTPClient(request_class=CowClientRequest).delete(
             url,
             params=params,
             auth=QiniuMacRequestsAuth(auth) if auth is not None else None,
@@ -195,7 +198,7 @@ class RequestBase:
         if headers is not None:
             for k, v in headers.items():
                 post_headers.update({k: v})
-        resp = await HTTPClient().delete(
+        resp = await HTTPClient(request_class=CowClientRequest).delete(
             url,
             params=params,
             auth=QiniuMacRequestsAuth(auth) if auth is not None else None,
@@ -211,12 +214,9 @@ class _TokenAuth:
     def __call__(self, r: CowClientRequest):
         r.headers['Authorization'] = 'UpToken {0}'.format(self.token)
         return r
-    
-    
-class QiniuMacRequestsAuth:
 
-    def __init__(self, auth):
-        self.auth = auth
+
+class QiniuMacRequestsAuth(CowHttpAuthBase):
 
     def __call__(self, r: CowClientRequest):
         token = self.auth.token_of_request(
@@ -229,9 +229,7 @@ class QiniuMacRequestsAuth:
         return r
     
 
-class RequestsAuth:
-    def __init__(self, auth):
-        self.auth = auth
+class RequestsAuth(CowHttpAuthBase):
 
     def __call__(self, r: CowClientRequest):
         if r.body is not None and r.headers.get('Content-Type') == 'application/x-www-form-urlencoded':
@@ -241,3 +239,4 @@ class RequestsAuth:
             token = self.auth.token_of_request(str(r.url))
         r.headers['Authorization'] = 'QBox {0}'.format(token)
         return r
+

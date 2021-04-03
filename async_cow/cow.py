@@ -15,23 +15,67 @@ from async_cow.service.sms.sms import Sms
 from async_cow.utils import crc32, file_crc32, rfc_from_timestamp
 
 
-class AsyncCow:
+class _BaseCow:
 
-    def __init__(self, access_key, secret_key, max_token_level=None, **settings):
+    def __init__(self,
+                 access_key,
+                 secret_key,
+                 auth_class=QiniuAuth,
+                 max_token_level=None,
+                 request_class=RequestBase,
+                 **settings
+                 ):
 
-        self._auth = QiniuAuth(access_key, secret_key, max_token_level)
+        if issubclass(auth_class, QiniuMacAuth):
+            self._auth = auth_class(access_key, secret_key)
+        elif issubclass(auth_class, QiniuAuth):
+            self._auth = auth_class(access_key, secret_key, max_token_level)
+        else:
+            self._auth = None
 
-        self._http = RequestBase(**settings)
+        self._http = request_class(**settings)
 
     @property
     def http(self):
-
         return self._http
 
     @property
     def auth(self):
+        return self._auth
 
-        return self.auth
+
+class AsyncCow(_BaseCow):
+
+    def __init__(self,
+                 access_key,
+                 secret_key,
+                 auth_class=QiniuAuth,
+                 max_token_level=None,
+                 bucket_class=Bucket,
+                 sms_class=Sms,
+                 rtc_server_class=RtcServer,
+                 persistent_fop_class=PersistentFop,
+                 cdn_manager_class=CdnManager,
+                 domain_manager_class=DomainManager,
+                 request_class=RequestBase,
+                 **settings):
+
+        super().__init__(
+            access_key,
+            secret_key,
+            auth_class=auth_class,
+            max_token_level=max_token_level,
+            request_class=request_class,
+            **settings
+        )
+
+        # 允许使用者通过继承相关功能类并传入的方式来获取更多扩展功能
+        self._bucket_class = bucket_class
+        self._sms_class = sms_class
+        self._rtc_server_class = rtc_server_class
+        self._persistent_fop_class = persistent_fop_class
+        self._cdn_manager_class = cdn_manager_class
+        self._domain_manager_class = domain_manager_class
 
     def get_bucket(self, bucket):
         """
@@ -39,7 +83,7 @@ class AsyncCow:
         对一个bucket的文件进行操作
         然后对此bucket的操作就只用传递文件名即可
         """
-        return Bucket(self, bucket)
+        return self._bucket_class(self, bucket)
 
     def get_sms(self):
         """
@@ -47,29 +91,31 @@ class AsyncCow:
         该对象的所有功能方法将返回协程对象，须await调用
         :return: object Sms
         """
-        return Sms(self)
+        return self._sms_class(self)
 
     def get_rtc_server(self):
         """
         获取直播连麦管理client
+        该对象的所有功能方法将返回协程对象，须await调用
         """
-        return RtcServer(self)
+        return self._rtc_server_class(self)
 
     def get_persistent_fop(self, bucket, pipeline=None, notify_url=None):
         """
         获取持久化处理对象
         该类用于主动触发异步持久化操作
+        该对象的所有功能方法将返回协程对象，须await调用
         """
-        return PersistentFop(self, bucket, pipeline, notify_url)
+        return self._persistent_fop_class(self, bucket, pipeline, notify_url)
 
     def get_cdn_manager(self):
         """获取cdn管理对象"""
 
-        return CdnManager(self)
+        return self._cdn_manager_class(self)
 
     def get_domain_manager(self):
         """获取域名管理对象"""
-        return DomainManager(self)
+        return self._domain_manager_class(self)
 
     def get_token(self,
                   bucket,
@@ -173,7 +219,6 @@ class AsyncCow:
         size = os.stat(file_path).st_size
         import aiofiles
         async with aiofiles.open(file_path, mode='rb') as input_stream:
-            # with open(file_path, 'rb') as input_stream:
             file_name = os.path.basename(file_path)
             modify_time = int(os.path.getmtime(file_path))
             if size > config._BLOCK_SIZE * 2:
@@ -252,39 +297,43 @@ class AsyncCow:
         return await task.upload()
 
 
-class ClientCow:
+class ClientCow(_BaseCow):
 
-    def __init__(self, access_key, secret_key, auth_class=QiniuMacAuth, **settings):
+    def __init__(self,
+                 access_key,
+                 secret_key,
+                 auth_class=QiniuMacAuth,
+                 max_token_level=None,
+                 account_client_class=AccountClient,
+                 qcos_client_class=QcosClient,
+                 request_class=RequestBase,
+                 **settings):
 
-        if issubclass(auth_class, QiniuMacAuth):
-            self._auth = auth_class(access_key, secret_key)
-        else:
-            self._auth = None
+        super().__init__(
+            access_key,
+            secret_key,
+            auth_class=auth_class,
+            max_token_level=max_token_level,
+            request_class=request_class,
+            **settings
+        )
 
-        self._http = RequestBase(**settings)
-
-    @property
-    def http(self):
-
-        return self._http
-
-    @property
-    def auth(self):
-
-        return self.auth
+        # 允许使用者通过继承相关功能类并传入的方式来获取更多扩展功能
+        self._account_client_class = account_client_class
+        self._qcos_client_class = qcos_client_class
 
     def get_app(self):
         """
         账号客户端
         auth=None，会自动使用 apiproxy 服务
         """
-        return AccountClient(self)
+        return self._account_client_class(self)
 
     def get_qcos_client(self):
         """
         资源管理客户端
         self.auth=None，会自动使用 apiproxy 服务，只能管理当前容器所在的应用资源。
         """
-        return QcosClient(self)
+        return self._qcos_client_class(self)
 
 

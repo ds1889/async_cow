@@ -92,9 +92,19 @@ class Result(dict):
         return self.get(r'json')
 
 
+class CowHttpAuthBase(object):
+
+    def __init__(self, auth):
+        self.auth = auth
+
+    def __call__(self, r):
+
+        raise NotImplementedError
+
+
 class CowClientRequest(ClientRequest):
 
-    def update_auth(self, auth) -> None:
+    def update_auth(self, auth: CowHttpAuthBase) -> None:
 
         if auth is None:
             auth = self.auth
@@ -146,15 +156,20 @@ class _HTTPClient:
             sock_read=sock_read, sock_connect=sock_connect
         )
 
-    async def send_request(self, method, url, data=None, params=None, cookies=None, headers=None, **settings):
+    async def send_request(self, method, url, data=None, params=None, cookies=None, headers=None, **settings) -> Result:
 
         response = None
 
         if headers is None:
             headers = {}
 
-        settings['data'] = data
+        if isinstance(data, dict):
+            headers.setdefault(
+                r'Content-Type',
+                r'application/x-www-form-urlencoded'
+            )
 
+        settings[r'data'] = data
         settings[r'params'] = params
         settings[r'cookies'] = cookies
         settings[r'headers'] = headers
@@ -176,17 +191,23 @@ class _HTTPClient:
                 async with aiohttp.ClientSession(**self._session_config) as _session:
 
                     async with _session.request(method, url, **settings) as _response:
-                        js = None
+
+                        _json = None
                         try:
-                            js = await _response.json()
+                            _json = await _response.json()
+                        except:
+                            pass
+                        _text = ''
+                        try:
+                            _text = await _response.text()
                         except:
                             pass
                         response = Result(
                             _response.status,
                             dict(_response.headers),
                             await self._handle_response(_response),
-                            await _response.text(),
-                            js,
+                            _text,
+                            _json,
                         )
 
             except aiohttp.ClientResponseError as err:
@@ -215,7 +236,7 @@ class _HTTPClient:
 
             else:
 
-                logger.debug(f'{method} {url} => status:{response.status}')
+                logger.info(f'{method} {url} => status:{response.status}')
                 break
 
             finally:

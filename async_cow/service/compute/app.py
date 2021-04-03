@@ -144,7 +144,7 @@ class AccountClient(object):
         Returns:
             返回产品信息列表，若失败则返回None
         """
-        apps, retInfo = await self.list_apps()
+        apps, ret_info = await self.list_apps()
         if apps is None:
             return None
 
@@ -152,7 +152,7 @@ class AccountClient(object):
             if app.get('uri') == app_uri:
                 return await self.get_region_products(app.get('region'))
 
-        return
+        return None
 
     async def get_region_products(self, region):
         """获得指定区域的产品信息

@@ -110,7 +110,7 @@ class Bucket(object):
             options['delimiter'] = delimiter
 
         url = '{0}/list'.format(config.get_default('default_rsf_host'))
-        ret, info = await self.__get(url, options)
+        ret, info = await self._get(url, options)
 
         eof = False
         if ret and not ret.get('marker'):
@@ -140,7 +140,7 @@ class Bucket(object):
             一个ResponseInfo对象
         """
         resource = entry(self._bucket, key)
-        return await self.__rs_do('stat', resource)
+        return await self._rs_do('stat', resource)
 
     async def delete(self, key):
         """删除文件:
@@ -157,7 +157,7 @@ class Bucket(object):
             一个ResponseInfo对象
         """
         resource = entry(self._bucket, key)
-        return await self.__rs_do('delete', resource)
+        return await self._rs_do('delete', resource)
 
     async def rename(self, key, key_to, force='false'):
         """重命名文件:
@@ -193,7 +193,7 @@ class Bucket(object):
 
         resource = entry(self._bucket, key)
         to = entry(bucket_to if bucket_to else self._bucket, key_to if key_to else key)
-        return await self.__rs_do('move', resource, to, 'force/{0}'.format(force))
+        return await self._rs_do('move', resource, to, 'force/{0}'.format(force))
 
     async def copy(self, key, bucket_to, key_to, force='false'):
         """复制文件:
@@ -213,7 +213,7 @@ class Bucket(object):
         """
         resource = entry(self._bucket, key)
         to = entry(bucket_to, key_to)
-        return await self.__rs_do('copy', resource, to, 'force/{0}'.format(force))
+        return await self._rs_do('copy', resource, to, 'force/{0}'.format(force))
 
     async def fetch(self, url, key=None, hostscache_dir=None):
         """抓取文件:
@@ -234,7 +234,7 @@ class Bucket(object):
         """
         resource = urlsafe_base64_encode(url)
         to = entry(self._bucket, key)
-        return await self.__io_do(self._bucket, 'fetch', hostscache_dir, resource, 'to/{0}'.format(to))
+        return await self._io_do(self._bucket, 'fetch', hostscache_dir, resource, 'to/{0}'.format(to))
 
     async def prefetch(self, key, hostscache_dir=None):
         """镜像回源预取文件:
@@ -252,7 +252,7 @@ class Bucket(object):
             一个ResponseInfo对象
         """
         resource = entry(self._bucket, key)
-        return await self.__io_do(self._bucket, 'prefetch', hostscache_dir, resource)
+        return await self._io_do(self._bucket, 'prefetch', hostscache_dir, resource)
 
     async def change_mime(self, key, mime):
         """修改文件mimeType:
@@ -267,7 +267,7 @@ class Bucket(object):
         """
         resource = entry(self._bucket, key)
         encode_mime = urlsafe_base64_encode(mime)
-        return await self.__rs_do('chgm', resource, 'mime/{0}'.format(encode_mime))
+        return await self._rs_do('chgm', resource, 'mime/{0}'.format(encode_mime))
 
     async def change_type(self, key, storage_type):
         """修改文件的存储类型
@@ -281,7 +281,7 @@ class Bucket(object):
             storage_type:   待操作资源存储类型，0为普通存储，1为低频存储，2 为归档存储
         """
         resource = entry(self._bucket, key)
-        return await self.__rs_do('chtype', resource, 'type/{0}'.format(storage_type))
+        return await self._rs_do('chtype', resource, 'type/{0}'.format(storage_type))
 
     async def restoreAr(self, key, freezeAfter_days):
         """解冻归档存储文件
@@ -295,7 +295,7 @@ class Bucket(object):
             freezeAfter_days:   解冻有效时长，取值范围 1～7
         """
         resource = entry(self._bucket, key)
-        return await self.__rs_do('restoreAr', resource, 'freezeAfterDays/{0}'.format(freezeAfter_days))
+        return await self._rs_do('restoreAr', resource, 'freezeAfterDays/{0}'.format(freezeAfter_days))
 
     async def change_status(self, key, status, cond):
         """修改文件的状态
@@ -313,8 +313,8 @@ class Bucket(object):
             for k, v in cond.items():
                 condstr += "{0}={1}&".format(k, v)
             condstr = urlsafe_base64_encode(condstr[:-1])
-            return await self.__rs_do('chstatus', resource, 'status/{0}'.format(status), 'cond', condstr)
-        return await self.__rs_do('chstatus', resource, 'status/{0}'.format(status))
+            return await self._rs_do('chstatus', resource, 'status/{0}'.format(status), 'cond', condstr)
+        return await self._rs_do('chstatus', resource, 'status/{0}'.format(status))
 
     async def batch(self, operations):
         """批量操作:
@@ -338,7 +338,7 @@ class Bucket(object):
             一个ResponseInfo对象
         """
         url = '{0}/batch'.format(config.get_default('default_rs_host'))
-        return await self.__post(url, dict(op=operations))
+        return await self._post(url, dict(op=operations))
 
     async def buckets(self):
         """获取所有空间名:
@@ -350,7 +350,7 @@ class Bucket(object):
                 [ <Bucket1>, <Bucket2>, ... ]
             一个ResponseInfo对象
         """
-        return await self.__rs_do('buckets')
+        return await self._rs_do('buckets')
 
     async def delete_after_days(self, key, days):
         """更新文件生命周期
@@ -373,7 +373,7 @@ class Bucket(object):
         if isinstance(days, int):
             days = str(days)
         resource = entry(self._bucket, key)
-        return await self.__rs_do('deleteAfterDays', resource, days)
+        return await self._rs_do('deleteAfterDays', resource, days)
 
     async def mkbucketv3(self, bucket_name, region):
         """
@@ -383,7 +383,7 @@ class Bucket(object):
             bucket_name: 存储空间名
             region: 存储区域
         """
-        return await self.__rs_do('mkbucketv3', bucket_name, 'region', region)
+        return await self._rs_do('mkbucketv3', bucket_name, 'region', region)
 
     async def list_bucket(self, region):
         """
@@ -391,7 +391,7 @@ class Bucket(object):
 
         Args:
         """
-        return await self.__uc_do('v3/buckets?region={0}'.format(region))
+        return await self._uc_do('v3/buckets?region={0}'.format(region))
 
     async def bucket_info(self, bucket_name=None):
         """
@@ -402,7 +402,7 @@ class Bucket(object):
         """
         if not bucket_name:
             bucket_name = self._bucket
-        return await self.__uc_do('v2/bucketInfo?bucket={}'.format(bucket_name), )
+        return await self._uc_do('v2/bucketInfo?bucket={}'.format(bucket_name), )
 
     async def bucket_domain(self, bucket_name=None):
         """
@@ -416,7 +416,7 @@ class Bucket(object):
             'tbl': bucket_name,
         }
         url = "{0}/v6/domain/list?tbl={1}".format(config.get_default("default_api_host"), bucket_name)
-        return await self.__get(url, options)
+        return await self._get(url, options)
 
     async def change_bucket_permission(self, bucket_name=None, private=1):
         """
@@ -429,70 +429,70 @@ class Bucket(object):
         if not bucket_name:
             bucket_name = self._bucket
         url = "{0}/private?bucket={1}&private={2}".format(config.get_default("default_uc_host"), bucket_name, private)
-        return await self.__post(url)
+        return await self._post(url)
 
-    async def __uc_do(self, operation, *args):
-        return await self.__server_do(config.get_default('default_uc_host'), operation, *args)
+    async def _uc_do(self, operation, *args):
+        return await self._server_do(config.get_default('default_uc_host'), operation, *args)
 
-    async def __rs_do(self, operation, *args):
-        return await self.__server_do(config.get_default('default_rs_host'), operation, *args)
+    async def _rs_do(self, operation, *args):
+        return await self._server_do(config.get_default('default_rs_host'), operation, *args)
 
-    async def __io_do(self, bucket, operation, home_dir, *args):
+    async def _io_do(self, bucket, operation, home_dir, *args):
         ak = self._cow.get_access_key()
         io_host = await self.zone.get_io_host(ak, bucket, home_dir)
-        return await self.__server_do(io_host, operation, *args)
+        return await self._server_do(io_host, operation, *args)
 
-    async def __server_do(self, host, operation, *args):
-        cmd = _build_op(operation, *args)
+    async def _server_do(self, host, operation, *args):
+        cmd = self._build_op(operation, *args)
         url = '{0}/{1}'.format(host, cmd)
-        return await self.__post(url)
+        return await self._post(url)
 
-    async def __post(self, url, data=None):
-        return await self._cow._http._post_with_auth(url, data, self._cow)
+    async def _post(self, url, data=None):
+        return await self._cow.http._post_with_auth(url, data, self._cow.auth)
 
-    async def __get(self, url, params=None):
-        return await self._cow._http._get_with_auth(url, params, self._cow)
+    async def _get(self, url, params=None):
+        return await self._cow.http._get_with_auth(url, params, self._cow.auth)
 
+    @classmethod
+    def _build_op(cls, *args):
+        return '/'.join(args)
 
-def _build_op(*args):
-    return '/'.join(args)
+    @classmethod
+    def build_batch_copy(cls, source_bucket, key_pairs, target_bucket, force='false'):
+        return cls._two_key_batch('copy', source_bucket, key_pairs, target_bucket, force)
 
+    @classmethod
+    def build_batch_rename(cls, bucket, key_pairs, force='false'):
+        return cls.build_batch_move(bucket, key_pairs, bucket, force)
 
-def build_batch_copy(source_bucket, key_pairs, target_bucket, force='false'):
-    return _two_key_batch('copy', source_bucket, key_pairs, target_bucket, force)
+    @classmethod
+    def build_batch_move(cls, source_bucket, key_pairs, target_bucket, force='false'):
+        return cls._two_key_batch('move', source_bucket, key_pairs, target_bucket, force)
 
+    @classmethod
+    def build_batch_restoreAr(cls, bucket, keys):
+        return cls._three_key_batch('restoreAr', bucket, keys)
 
-def build_batch_rename(bucket, key_pairs, force='false'):
-    return build_batch_move(bucket, key_pairs, bucket, force)
+    @classmethod
+    def build_batch_delete(cls, bucket, keys):
+        return cls._one_key_batch('delete', bucket, keys)
 
-
-def build_batch_move(source_bucket, key_pairs, target_bucket, force='false'):
-    return _two_key_batch('move', source_bucket, key_pairs, target_bucket, force)
-
-
-def build_batch_restoreAr(bucket, keys):
-    return _three_key_batch('restoreAr', bucket, keys)
-
-
-def build_batch_delete(bucket, keys):
-    return _one_key_batch('delete', bucket, keys)
-
-
-def build_batch_stat(bucket, keys):
-    return _one_key_batch('stat', bucket, keys)
-
-
-def _one_key_batch(operation, bucket, keys):
-    return [_build_op(operation, entry(bucket, key)) for key in keys]
-
-
-def _two_key_batch(operation, source_bucket, key_pairs, target_bucket, force='false'):
-    if target_bucket is None:
-        target_bucket = source_bucket
-    return [_build_op(operation, entry(source_bucket, k), entry(target_bucket, v), 'force/{0}'.format(force)) for k, v
-            in key_pairs.items()]
-
-
-def _three_key_batch(operation, bucket, keys):
-    return [_build_op(operation, entry(bucket, k), 'freezeAfterDays/{0}'.format(v)) for k, v
-            in keys.items()]
+    @classmethod
+    def build_batch_stat(cls, bucket, keys):
+        return cls._one_key_batch('stat', bucket, keys)
+    
+    @classmethod
+    def _one_key_batch(cls, operation, bucket, keys):
+        return [cls._build_op(operation, entry(bucket, key)) for key in keys]
+    
+    @classmethod
+    def _two_key_batch(cls, operation, source_bucket, key_pairs, target_bucket, force='false'):
+        if target_bucket is None:
+            target_bucket = source_bucket
+        return [cls._build_op(operation, entry(source_bucket, k), entry(target_bucket, v), 'force/{0}'.format(force)) for k, v
+                in key_pairs.items()]
+    
+    @classmethod
+    def _three_key_batch(cls, operation, bucket, keys):
+        return [cls._build_op(operation, entry(bucket, k), 'freezeAfterDays/{0}'.format(v)) for k, v
+                in keys.items()]
