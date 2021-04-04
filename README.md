@@ -119,7 +119,7 @@ except Exception as e:
     pass
 ```
 
-###短信客户端操作
+### 短信客户端操作
 
 ```python
 # 获取一个短信客户端对象
@@ -144,7 +144,7 @@ await sms.updateTemplate(<id>, <name>, <template>, <description>, <signature_id>
 await sms.deleteTemplate(<id>)
 ```
 
-####发送短信，查看发送记录，查询发送计费条数
+#### 发送短信，查看发送记录，查询发送计费条数
 
 ```python
 await sms.sendMessage(<template_id>, <mobiles>, <parameters>)
@@ -303,7 +303,7 @@ await app.get_valid_app_auth(<app_uri>)
 await app.get_account_info()
 ```
 
-####获得指定应用所在区域的产品信息
+#### 获得指定应用所在区域的产品信息
 
 ```python
 await app.get_app_region_products(<app_uri>)
@@ -466,7 +466,7 @@ await q.get_web_proxy(<backend>)
 
 ## 测试
 
-###桶测试
+### 桶测试
 
 1.  首先从github clone项目到本地
 2.  在项目中有example供测试，配置好main.py中的access_key、secret_key、bucket以及file_path参数后即可开始测试
