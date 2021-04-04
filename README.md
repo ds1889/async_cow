@@ -167,7 +167,7 @@ await p.execute(<key>, <fops>)
 
 
 
-###直播连麦管理
+### 直播连麦管理
 
 ```python
 # 获取一个管理类对象
