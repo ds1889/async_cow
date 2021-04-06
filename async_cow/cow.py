@@ -117,6 +117,10 @@ class AsyncCow(_BaseCow):
         """获取域名管理对象"""
         return self._domain_manager_class(self)
 
+    async def release(self):
+
+        await self._http.close()
+
     def get_token(self,
                   bucket,
                   key=None,
@@ -293,7 +297,7 @@ class AsyncCow(_BaseCow):
                          keep_last_modified=False):
 
         task = _Resume(up_token, key, input_stream, file_name, data_size, hostscache_dir, params, mime_type,
-                       progress_handler, upload_progress_recorder, modify_time, keep_last_modified)
+                       progress_handler, upload_progress_recorder, modify_time, keep_last_modified, http=self.http)
         return await task.upload()
 
 
@@ -336,4 +340,5 @@ class ClientCow(_BaseCow):
         """
         return self._qcos_client_class(self)
 
-
+    async def release(self):
+        await self._http.close()

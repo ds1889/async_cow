@@ -34,13 +34,45 @@ def return_wrapper(func):
     return _wrapper
 
 
-class RequestBase:
+class SingletonMetaclass(type):
+    """单例的元类
+    """
+
+    def __init__(cls, *args, **kwargs):
+
+        cls._instance = None
+
+        super().__init__(*args, **kwargs)
+
+    def __call__(cls, *args, **kwargs):
+
+        result = None
+
+        try:
+
+            if cls._instance is not None:
+                result = cls._instance
+            else:
+                result = cls._instance = super().__call__(*args, **kwargs)
+
+        except Exception as _:
+
+            traceback.print_exc()
+
+        return result
+
+
+class RequestBase(metaclass=SingletonMetaclass):
 
     def __init__(self, **setting):
 
-        # self._http_client_pool = HTTPClientPool(request_class=CowClientRequest, **setting)
+        self._http_client_pool = HTTPClientPool(request_class=CowClientRequest, **setting)
         self._setting = setting
         self._headers = {'User-Agent': USER_AGENT}
+
+    async def close(self):
+
+        await self._http_client_pool.close()
 
     @return_wrapper
     async def _post(self, url, data, files, auth, headers=None):
@@ -61,7 +93,7 @@ class RequestBase:
         else:
             form = data
 
-        resp = await HTTPClient(request_class=CowClientRequest, **self._setting).post(
+        resp = await self._http_client_pool.post(
             url,
             data=form,
             auth=auth,
@@ -89,7 +121,7 @@ class RequestBase:
         else:
             form = data
 
-        resp = await HTTPClient(request_class=CowClientRequest, **self._setting).put(
+        resp = await self._http_client_pool.put(
             url,
             data=form,
             auth=auth,
@@ -106,7 +138,7 @@ class RequestBase:
             for k, v in headers.items():
                 post_headers.update({k: v})
 
-        resp = await HTTPClient(request_class=CowClientRequest, **self._setting).get(
+        resp = await self._http_client_pool.get(
             url,
             params=params,
             auth=auth,
