@@ -59,7 +59,7 @@ def file_crc32(filePath):
     """
     crc = 0
     with open(filePath, 'rb') as f:
-        for block in _file_iter(f, _BLOCK_SIZE):
+        for block in _sync_file_iter(f, _BLOCK_SIZE):
             crc = binascii.crc32(block, crc) & 0xFFFFFFFF
     return crc
 
@@ -77,7 +77,7 @@ def crc32(data):
 
 
 async def _file_iter(input_stream, size, offset=0):
-    """读取输入流:
+    """异步读取输入流，用于大文件:
 
     Args:
         input_stream: 待读取文件的二进制流
@@ -91,6 +91,23 @@ async def _file_iter(input_stream, size, offset=0):
     while d:
         yield d
         d = await input_stream.read(size)
+
+
+def _sync_file_iter(input_stream, size, offset=0):
+    """同步读取输入流，用于小文件:
+
+    Args:
+        input_stream: 待读取文件的二进制流
+        size:         二进制流的大小
+
+    Raises:
+        IOError: 文件流读取失败
+    """
+    input_stream.seek(offset)
+    d = input_stream.read(size)
+    while d:
+        yield d
+        d = input_stream.read(size)
 
 
 def _sha1(data):
